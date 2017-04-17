@@ -2,8 +2,21 @@ package com.fzy.hello_world;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by fuzhongyu on 2017/4/10.
@@ -24,6 +37,9 @@ public class HelloWorldController {
     @Autowired
     private com.fzy.hello_world.test.HelloService helloService1;
 
+    @Autowired
+    private HelloService helloService2;
+
     /**
      * 注：一个接口有两个实现类的时候需要指定实例化的类
      *
@@ -34,11 +50,150 @@ public class HelloWorldController {
     private WorldService worldService;
 
 
+    /**
+     * list autowired
+     */
+    @Autowired
+    private List<WorldService> worldServiceList;
+
+    /**
+     * map autowired
+     */
+    @Autowired
+    private Map<String,WorldService> worldServiceMap;
+
+
     @RequestMapping(value = "")
     public String helloWorld(){
         helloService.service();
         helloService1.service();
         worldService.service();
+        for (WorldService worldService:worldServiceList){
+            System.out.println("-->list:"+worldService.getClass().getName());
+        }
+
+        for(Map.Entry entry:worldServiceMap.entrySet()){
+            System.out.println("==>map:"+entry.getKey()+"    "+entry.getValue().getClass().getName());
+        }
         return "/hello_world/helloWorld";
     }
+
+    @RequestMapping("uploadPage")
+    public String uploadPage(){
+        return "/hello_world/fileUpload";
+    }
+
+
+    /**
+     * 文件上传测试
+     * @param file
+     * @param request
+     * @return
+     */
+    @RequestMapping("uploadFile")
+    public String uploadFile(MultipartFile file, HttpServletRequest request){
+
+        if(!file.isEmpty()){
+            String url="/Users/fuzhongyu//IdeaProjects/MyLearn_2/"+file.getOriginalFilename();
+            System.out.println(url);
+            try {
+               File fi=new File(url);
+               file.transferTo(fi);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return "redirect:/helloWorld/";
+
+    }
+
+    @RequestMapping(value = "checkPic")
+    public void checkPic(HelloEntity helloEntity,HttpServletResponse response){
+
+        String pic=helloEntity.getTitle();
+       StringBuilder returnMessage=new StringBuilder("{");
+        if(pic!=null){
+            String[] strings=pic.split("\\.");
+            String suffix=strings[strings.length-1];
+            if("jpg".equals(suffix)||"jpeg".equals(suffix)||"png".equals(suffix)){
+                returnMessage.append("\"msg\":\"success\"}");
+            }else {
+                returnMessage.append("\"msg\":\"fail\"}");
+            }
+        }
+
+        try {
+            response.reset();
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.getWriter().print(returnMessage);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * responseBody将对象转成json格式
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "checkPic_2")
+    public List<HelloEntity> checkPic_2(){
+        List<HelloEntity> list=new ArrayList<HelloEntity>();
+        HelloEntity helloEntity=new HelloEntity();
+        helloEntity.setTitle("hello fzy");
+        HelloEntity helloEntity1=new HelloEntity();
+        helloEntity1.setTitle("hello mr fu");
+        list.add(helloEntity);
+        list.add(helloEntity1);
+        return list;
+    }
+
+    /**
+     * spring内置对象转json格式
+     * @return
+     */
+    @RequestMapping(value = "checkPic_3",method = RequestMethod.GET)
+    public ResponseEntity<List<HelloEntity>> checkPic_3(){
+        List<HelloEntity> list=new ArrayList<HelloEntity>();
+        HelloEntity helloEntity=new HelloEntity();
+        helloEntity.setTitle("hello fzy");
+        HelloEntity helloEntity1=new HelloEntity();
+        helloEntity1.setTitle("hello mr fu");
+        list.add(helloEntity);
+        list.add(helloEntity1);
+        return new ResponseEntity<List<HelloEntity>>(list, HttpStatus.OK);
+    }
+
+
+    /**
+     * spring 默认创建的是一个单例，helloService2_hashcode和 helloService_hashcode的值会一样
+     * 配置非单例模式可设置service类中的scope
+     * @return
+     */
+    @RequestMapping(value = "testSingle")
+    public  String testSpringSingleton(){
+        helloService.changStr("fzy");
+        System.out.println(helloService2.getStr());
+        System.out.println("helloService2_hashcode:"+helloService2.hashCode()+"  helloService_hashcode: "+helloService.hashCode());
+        return "redirect:/helloWorld/testSingle2";
+    }
+
+    @RequestMapping(value = "testSingle2")
+    public  String testSpringSingleton2(){
+        System.out.println(helloService2.getStr());
+        System.out.println("helloService2_hashcode:"+helloService2.hashCode()+"  helloService_hashcode: "+helloService.hashCode());
+        return "redirect:/helloWorld/";
+    }
+
+    @RequestMapping(value = "form")
+    public String form(HelloEntity helloEntity){
+        System.out.println(helloEntity.hashCode());
+        return "/hello_world/helloWorldForm";
+    }
+
+
+
 }
