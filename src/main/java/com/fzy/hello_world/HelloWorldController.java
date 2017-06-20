@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -13,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +94,7 @@ public class HelloWorldController {
     public String uploadFile(MultipartFile file, HttpServletRequest request){
 
         if(!file.isEmpty()){
-            String url="/Users/fuzhongyu//IdeaProjects/MyLearn_2/"+file.getOriginalFilename();
+            String url="/Users/fuzhongyu//IdeaProjects/MyLearn/MyLearn_2/"+file.getOriginalFilename();
             System.out.println(url);
             try {
                File fi=new File(url);
@@ -139,8 +139,8 @@ public class HelloWorldController {
      * @return
      */
     @ResponseBody
-    @RequestMapping(value = "checkPic_2")
-    public List<HelloEntity> checkPic_2(){
+    @RequestMapping(value = "checkPic_2",produces = "application/json;charset=utf-8")
+    public List<HelloEntity> checkPic_2(@CookieValue(value = "t",required = false) String t){
         List<HelloEntity> list=new ArrayList<HelloEntity>();
         HelloEntity helloEntity=new HelloEntity();
         helloEntity.setTitle("hello fzy");
@@ -148,6 +148,18 @@ public class HelloWorldController {
         helloEntity1.setTitle("hello mr fu");
         list.add(helloEntity);
         list.add(helloEntity1);
+        return list;
+    }
+
+    /**
+     * 设置请求格式和cookie事例
+     * @param t
+     * @return
+     */
+    @ResponseBody
+    @RequestMapping(value = "checkPic_2_1",produces = "application/json;charset=utf-8")
+    public List<HelloEntity> checkPic_2_1(@CookieValue(value = "t",required = false) String t){
+        List<HelloEntity> list=new ArrayList<HelloEntity>();
         return list;
     }
 
